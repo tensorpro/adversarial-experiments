@@ -61,15 +61,20 @@ print('raw acc', raw_acc)
 print('ad acc', raw_acc)
 
 ## Vis
-accuracy_scaled = print(np.mean(raw_p==ad_p))
-images_aug = seq.augment_images([image]*6)
-images_aug = seq.augment_images([adversarial]*6)
-# plt.imshow(images_aug[0][:,:,::-1]/255.);plt.show()
 
-for img in images_aug:
-    plt.title(str(kmodel.predict(np.array([img])).argmax()))
-    plt.imshow(img[:,:,::-1]);plt.show()
-    # plt.title(str(kmodel.predict(np.array([img])).argmax()))
-    # plt.imshow(img[:,:,::-1]);plt.show()
-    
+show = False
+
+if show:
+    accuracy_scaled = print(np.mean(raw_p==ad_p))
+    images_aug = seq.augment_images([image]*6)
+    images_aug = seq.augment_images([adversarial]*6)
+    # plt.imshow(images_aug[0][:,:,::-1]/255.);plt.show()
+
+
+    for img in images_aug:
+        plt.title(str(kmodel.predict(np.array([img])).argmax()))
+        plt.imshow(img[:,:,::-1]);plt.show()
+        # plt.title(str(kmodel.predict(np.array([img])).argmax()))
+        # plt.imshow(img[:,:,::-1]);plt.show()
+
 
