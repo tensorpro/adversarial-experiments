@@ -90,7 +90,9 @@ def calculate_margins(images, model, label):
     close_idx = masked.argmax(1)
     margin = pred[range(len(images)),label]-pred[range(len(images)),close_idx]
     return margin
-def CEM(image, model, label, n_components=3, n_samples=50, elite_rate=.1,
+
+
+def cem(image, model, label, n_components=3, n_samples=50, elite_rate=.1,
         n_steps = 1, dist=dist):
     H,W,C = image.shape
     image_base = np.expand_dims(image,0).repeat(n_samples, 0)
@@ -110,3 +112,30 @@ def CEM(image, model, label, n_components=3, n_samples=50, elite_rate=.1,
         gm.fit(elite_samples.reshape((n_elite, -1)))
         samples = gm.sample(n_samples)[0].reshape(n_samples, H,W,C)
     return gm, avg_margins, avg_elite_margins
+
+class CEM:
+
+    def __init__(self, model, image, label, n_samples=1000,
+                 elite_rate=.1, f=GaussianMixture(100,'spherical')):
+        H,W,C = image.shape
+        self.shape = image.shape
+        image_base = np.expand_dims(image,0).repeat(n_samples, 0)
+        noise = sample_spherical(n_samples, H*W*C).reshape([n_samples,H,W,C])*dist
+        self.samples = image_base + noise
+        self.n_samples = n_samples
+        self.n_elite = int(elite_rate*n_samples)
+        assert(self.n_elite > 0)
+        self.avg_margins = []
+        self.avg_elite_margins = []
+        self.f = f
+
+    def step(self):
+        margin = calculate_margins(self.samples, model, label)
+        self.avg_margins.append(margin.mean())
+        elite_idx = margin.argsort()[:self.n_elite]
+        self.avg_elite_margins.append(margin[elite_idx].mean())
+        elite_samples = self.samples[elite_idx]
+        self.f.fit(elite_samples.reshape((self.n_elite, -1)))
+        H,W,C = self.shape
+        self.samples = self.f.sample(self.n_samples)[0].reshape(self.n_samples, H,W,C)
+
