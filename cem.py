@@ -1,7 +1,7 @@
 import numpy as np
 import foolbox
 import keras
-
+import os
 
 from sklearn.mixture import GaussianMixture
 from keras.applications import vgg16, vgg19, resnet50
@@ -42,14 +42,7 @@ label=282
 image = image[:,:,::-1]
 pp = resnet50.preprocess_input
 pp = lambda x:x
-print('original', kmodel.predict(pp(np.array([image]))).argmax())
-# apply attack on source image
-attack = foolbox.attacks.GradientAttack(fmodel)
-# attack = foolbox.attacks.GradientSignAttack(fmodel)
-# attack = foolbox.attacks.DeepFoolAttack(fmodel)
-adversarial = attack(image, label)
-print('adversarial', kmodel.predict(pp(np.array([adversarial]))).argmax())
-dist = np.linalg.norm(adversarial-image)
+
 dist = 98.73439
 ## Noising
 def sample_spherical(npoints, ndim):
@@ -57,28 +50,6 @@ def sample_spherical(npoints, ndim):
     vec /= np.linalg.norm(vec, axis=0)
     return vec
 
-
-## Sample points
-N = 100
-
-noise = sample_spherical(N,224**2*3).reshape([N]+list(image.shape))*dist
-batch = np.array([image]*N)
-noised = noise+batch
-pred = kmodel.predict(noised)
-print('adversarial', pred.argmax(1))
-
-true_score = pred.argmax(1)
-masked = pred.copy()
-masked[:,label]=0
-margin = (pred[:,label])-np.max(masked,1)
-print('margin',margin)
-
-print('min m', np.min(margin))
-print('Predicted:', decode_predictions(pred, top=3)[0])
-
-## GM
-gm = GaussianMixture(3, 'spherical')
-gm.fit(noised.reshape([N,-1]))
 
 
 ## CEM
