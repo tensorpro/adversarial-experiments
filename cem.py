@@ -99,9 +99,11 @@ class CEM:
         self.avg_margins = []
         self.avg_elite_margins = []
         self.f = f
+        self.model = model
+        self.label = label
 
     def step(self):
-        margin = calculate_margins(self.samples, model, label)
+        margin = calculate_margins(self.samples, self.model, self.label)
         self.avg_margins.append(margin.mean())
         elite_idx = margin.argsort()[:self.n_elite]
         self.avg_elite_margins.append(margin[elite_idx].mean())
